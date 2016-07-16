@@ -160,16 +160,17 @@ if [[ ! -f ~/.uconsole/uconsole.conf ]]; then
             break 1
         else
             echo "New one will be added"
+            msStatus=1
             let i=i+1
         fi
 
     done
 
-    echo ${SERVERS_LIST[*]}
-    rm -rf ~/.uconsole
-    exit
+    echo "Servers with share: ${SERVERS_LIST[*]}"
+    sed -i "s|SERVERS_LIST|`echo ${SERVERS_LIST[*]}`|" ~/.uconsole/uconsole.conf
+    
 else
-    . $BIN_PATH/conf.d/console.conf
+    . ~/.uconsole/uconsole.conf
 fi
 
 
