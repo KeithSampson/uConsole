@@ -14,7 +14,18 @@ RED='\033[0;31m'
 GREEN='\033[0;32m'
 
 function updatesCheck () {
-    echo "No updates"
+    remoteVer=`curl -s https://raw.githubusercontent.com/KeithSampson/uConsole/master/uConsole.sh |grep Version |sed s/[^0-9.]//g`
+    currentVer=`cat $0 |grep "### Version" |sed s/[^0-9.]//g`
+
+    if [[ $currentVer == $remoteVer ]]; then
+        echo "No updates"
+    else
+        wget -O uConsole.sh_new https://raw.githubusercontent.com/KeithSampson/uConsole/master/uConsole.sh
+        chmod +x uConsole.sh_new
+        rm -f $0
+        mv uConsole.sh_new uConsole.sh
+    fi
+~                  
 }
 
 function shareMount () {
@@ -69,7 +80,10 @@ echo -en "${GREEN}Do you want to mount share? (Y/n): ${NORMAL}"
     chown -R $userAccount.$userAccount /home/$userAccount/$mountFolder
     mountSource="$mountServer/$mountFolder"
 
-    echo "mount -t cifs $mountSource /home/$userAccount/$mountFolder"
+    echo "mount -t cifs $mountSource /home/$userAccount/$mountFolder" >> /etc/fstab
+    if [[ `cat /etc/fstab |grep "/home/$userAccount/" |wc -l` > 0 ]]; then
+        echo "$(date +%F_%H-%M-%S) - Share for $userAccount account added to /etc/fstab."
+    fi
 }
 
 function userAdd () {
@@ -105,7 +119,13 @@ function userAdd () {
 }
 
 function userDel () {
-    echo "Please select account for removal: "
+    if [[ `ls /home |wc -l` == 0 ]]; then
+        echo -en "${RED}Nothing found in home directory. Exit.${NORMAL}"
+        echo ""
+        exit 2
+    fi
+    echo -en "${BOLD}Please select account for removal:  ${NORMAL}"
+    echo ""
     select userAccount in `ls /home`
     do
         if [[ $userAccount == "" ]]; then
@@ -116,8 +136,17 @@ function userDel () {
         break
     done
 
-    echo -en "${GREEN}Account $userAccount will be removed. Please confirm (y/N): ${NORMAL}"
-    read confirmDel
+    if id -u $userAccount >/dev/null 2>&1; then
+        echo -en "${GREEN}Account $userAccount will be removed. Please confirm (y/N): ${NORMAL}"
+        echo ""
+        read confirmDel
+    else
+        echo -en "${RED}$(date +%F_%H-%M-%S) - [error] Account $userAccount was not found in system. Abort. ${NORMAL}"
+        echo ""
+        confirmDel="N"
+        exit 3
+    fi
+    
     if [[ $confirmDel == "y" || $confirmAdd == "Y" ]]; then
         userdel --remove $userAccount
         if id -u $userAccount >/dev/null 2>&1; then
@@ -125,6 +154,11 @@ function userDel () {
             exit 3
         else
             echo "$(date +%F_%H-%M-%S) - Account $userAccount removed"
+        fi
+
+        if [[ `cat /etc/fstab |grep "/home/$userAccount/" |wc -l` > 0 ]]; then
+            sed -i "/\/home\/$userAccount\//d" /etc/fstab
+            echo "$(date +%F_%H-%M-%S) - Share for $userAccount account removed from /etc/fstab."
         fi
     fi
 
@@ -168,7 +202,7 @@ if [[ ! -f ~/.uconsole/uconsole.conf ]]; then
 
     echo "Servers with share: ${SERVERS_LIST[*]}"
     sed -i "s|SERVERS_LIST|`echo ${SERVERS_LIST[*]}`|" ~/.uconsole/uconsole.conf
-    
+
 else
     . ~/.uconsole/uconsole.conf
 fi
