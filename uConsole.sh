@@ -14,8 +14,11 @@ RED='\033[0;31m'
 GREEN='\033[0;32m'
 
 function updatesCheck () {
-    remoteVer=`curl -s https://raw.githubusercontent.com/KeithSampson/uConsole/master/uConsole.sh |grep Version |sed s/[^0-9.]//g`
-    currentVer=`cat $0 |grep "### Version" |sed s/[^0-9.]//g`
+    remoteVer=`curl -s https://raw.githubusercontent.com/KeithSampson/uConsole/master/uConsole.sh |grep "### Version" |head -n1 |sed s/[^0-9.]//g`
+    currentVer=`cat $0 |grep "### Version" |head -n1 |sed s/[^0-9.]//g`
+
+    echo "Current Version: $currentVer"
+    echo "Remote Version: $remoteVer"
 
     if [[ $currentVer == $remoteVer ]]; then
         echo "$(date +%F_%H-%M-%S) - No updates"
