@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 ##################################################
 ### Script: uConsole                           ###
-### Version 0.2.1                              ###
+### Version 0.2.2                              ###
 ### Made by Kostya Shutenko                    ###
 ### Contact address: kostya.shutenko@gmail.com ###
 ##################################################
@@ -17,8 +17,10 @@ function updatesCheck () {
     remoteVer=`curl -s https://raw.githubusercontent.com/KeithSampson/uConsole/master/uConsole.sh |grep "### Version" |head -n1 |sed s/[^0-9.]//g`
     currentVer=`cat $0 |grep "### Version" |head -n1 |sed s/[^0-9.]//g`
 
-    echo "Current Version: $currentVer"
-    echo "Remote Version: $remoteVer"
+    echo -en "${BOLD}Current Version: $currentVer ${NORMAL}"
+    echo ""
+    echo -en "${BOLD}Remote Version: $remoteVer ${NORMAL}"
+    echo ""
 
     if [[ $currentVer == $remoteVer ]]; then
         echo "$(date +%F_%H-%M-%S) - No updates"
@@ -27,7 +29,7 @@ function updatesCheck () {
         chmod +x uConsole.sh_new
         rm -f $0
         mv uConsole.sh_new uConsole.sh
-        echo "$(date +%F_%H-%M-%S) - Script uConsole.sh updated."
+        echo "$(date +%F_%H-%M-%S) - Script uConsole.sh updated to $remoteVer"
     fi                  
 }
 
