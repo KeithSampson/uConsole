@@ -13,14 +13,6 @@ CYAN='\e[0;36m'
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 
-if [[ ! -f $BIN_PATH/conf.d/console.conf ]]; then
-    echo "Config was not found."
-    echo "Please create $BIN_PATH/conf.d/console.conf"
-    exit 1
-else
-    . $BIN_PATH/conf.d/console.conf
-fi
-
 function updatesCheck () {
     echo "No updates"
 }
@@ -139,6 +131,46 @@ function userDel () {
 }
 
 
+if [[ ! -f ~/.uconsole/uconsole.conf ]]; then
+    echo "Config was not found."
+    mkdir -p ~/.uconsole/
+    cp $BIN_PATH/sources/uconsole.conf-simple ~/.uconsole/uconsole.conf
+    
+    declare -a SERVERS_LIST
+    i=0
+
+    until [[ $asStatus == 0 ]]; do
+        until [[ $msStatus == 0 ]]; do
+            echo -en "${CYAN}Enter new share path (in format //IP_ADDRESS/SHARE): ${NORMAL}"
+            read mountServer
+            if [[ `echo $mountServer |cut -c1-2` == '//' ]]; then
+                SERVERS_LIST[$i]=$mountServer
+                msStatus=0
+                break 1
+            else
+                echo -en "${RED}Incorrect path: $mountServer. Please use format //IP_ADDRESS/SHARE${NORMAL}"
+                echo ""
+            fi
+        done
+
+        echo "Is it finish (y/N)"
+        read asStatus
+        if [[ $asStatus == 'y' || $asStatus == "Y" ]]; then
+            asStatus=0
+            break 1
+        else
+            echo "New one will be added"
+            let i=i+1
+        fi
+
+    done
+
+    echo ${SERVERS_LIST[*]}
+    rm -rf ~/.uconsole
+    exit
+else
+    . $BIN_PATH/conf.d/console.conf
+fi
 
 
 case "$1" in
@@ -156,7 +188,7 @@ case "$1" in
         ;;
 *)
         echo "Wrong method."
-        echo "You must use the following methods with $0:"
+        echo "You must use the following methods with uConsole:"
         echo ""
         echo -en "${GREEN}`cat $0 |grep "^function"  |awk {'print$2'}`${NORMAL}"
         echo ""
