@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 ##################################################
 ### Script: uConsole                           ###
-### Version 0.2.2                              ###
+### Version 0.2.3                              ###
 ### Made by Kostya Shutenko                    ###
 ### Contact address: kostya.shutenko@gmail.com ###
 ##################################################
@@ -25,10 +25,10 @@ function updatesCheck () {
     if [[ $currentVer == $remoteVer ]]; then
         echo "$(date +%F_%H-%M-%S) - No updates"
     else
-        wget -O uConsole.sh_new https://raw.githubusercontent.com/KeithSampson/uConsole/master/uConsole.sh
+        wget -O uConsole.sh_$remoteVer https://raw.githubusercontent.com/KeithSampson/uConsole/master/uConsole.sh
         chmod +x uConsole.sh_new
         rm -f $0
-        mv uConsole.sh_new uConsole.sh
+        mv uConsole.sh_$remoteVer uConsole.sh
         echo "$(date +%F_%H-%M-%S) - Script uConsole.sh updated to $remoteVer"
     fi                  
 }
