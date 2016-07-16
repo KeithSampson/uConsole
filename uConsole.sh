@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 ##################################################
 ### Script: uConsole                           ###
-### Version 0.2                                ###
+### Version 0.2.1                              ###
 ### Made by Kostya Shutenko                    ###
 ### Contact address: kostya.shutenko@gmail.com ###
 ##################################################
@@ -28,8 +28,7 @@ function updatesCheck () {
         rm -f $0
         mv uConsole.sh_new uConsole.sh
         echo "$(date +%F_%H-%M-%S) - Script uConsole.sh updated."
-    fi
-~                  
+    fi                  
 }
 
 function shareMount () {
