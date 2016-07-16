@@ -26,7 +26,7 @@ function updatesCheck () {
         echo "$(date +%F_%H-%M-%S) - No updates"
     else
         wget -O uConsole.sh_$remoteVer https://raw.githubusercontent.com/KeithSampson/uConsole/master/uConsole.sh
-        chmod +x uConsole.sh_new
+        chmod +x uConsole.sh_$remoteVer
         rm -f $0
         mv uConsole.sh_$remoteVer uConsole.sh
         echo "$(date +%F_%H-%M-%S) - Script uConsole.sh updated to $remoteVer"
