@@ -77,6 +77,23 @@ echo -en "${GREEN}Do you want to mount share? (Y/n): ${NORMAL}"
             fi
             break
         done
+
+        echo "Select username for mount share:"
+        select shareUsername in `echo $CIFS_USERNAME"@"$CIFS_DOMAIN` 'Custom'
+        do
+            if [[ $shareUsername == 'Custom' ]]; then
+                    echo -en "${CYAN}Enter default username for mount share folders: ${NORMAL}"
+                    read cifsUserName
+                    echo -en "${CYAN}Enter default password for mount share folders: ${NORMAL}"
+                    read cifsUserPwd
+                    echo -en "${CYAN}Enter domain for share user: ${NORMAL}"
+                    read cifsDomain
+            else
+                    cifsUserName=$CIFS_USERNAME
+                    cifsUserPwd=$CIFS_PWD
+                    cifsDomain=$CIFS_DOMAIN
+            fi
+        done
     fi
 
     echo -en "${CYAN}Enter account folder on share server:${NORMAL} $mountServer/"
@@ -85,7 +102,7 @@ echo -en "${GREEN}Do you want to mount share? (Y/n): ${NORMAL}"
     chown -R $userAccount.$userAccount /home/$userAccount/$mountFolder
     mountSource="$mountServer/$mountFolder"
 
-    echo "mount -t cifs $mountSource /home/$userAccount/$mountFolder" >> /etc/fstab
+    echo "mount -t cifs $mountSource /home/$userAccount/$mountFolder -o username=$cifsUserName,password=$cifsUserPwd,domain=$cifsDomain" >> /etc/fstab
     if [[ `cat /etc/fstab |grep "/home/$userAccount/" |wc -l` > 0 ]]; then
         echo "$(date +%F_%H-%M-%S) - Share for $userAccount account added to /etc/fstab."
     fi
@@ -171,7 +188,7 @@ function userDel () {
 
 
 if [[ ! -f ~/.uconsole/uconsole.conf ]]; then
-    echo "Config was not found."
+    echo "Config file absent and will be created."
     mkdir -p ~/.uconsole/
     cp $BIN_PATH/sources/uconsole.conf-simple ~/.uconsole/uconsole.conf
     
@@ -205,9 +222,37 @@ if [[ ! -f ~/.uconsole/uconsole.conf ]]; then
 
     done
 
-    echo "Servers with share: ${SERVERS_LIST[*]}"
-    sed -i "s|SERVERS_LIST|`echo ${SERVERS_LIST[*]}`|" ~/.uconsole/uconsole.conf
 
+    echo -en "${CYAN}Enter default username for mount share folders: ${NORMAL}"
+    read cifsUserName
+    echo -en "${CYAN}Enter default password for mount share folders: ${NORMAL}"
+    read cifsUserPwd
+    echo -en "${CYAN}Enter domain for share user: ${NORMAL}"
+    read cifsDomain
+
+    echo -en "${BOLD}Config will be created with the follwing paramethers:${NORMAL}"
+    echo ""
+    echo -en "${BOLD}Servers with share: \"${SERVERS_LIST[*]}${NORMAL}\""
+    echo ""
+    echo -en "${BOLD}Username:${NORMAL} $cifsUserName"
+    echo ""
+    echo -en "${BOLD}Password:${NORMAL} $cifsUserPwd"
+    echo ""
+    echo -en "${BOLD}Domain:${NORMAL} $cifsDomain"
+    echo ""
+    echo -en "${GREEN}Please confirm (Y/n): ${NORMAL}"
+    read confirmConfAdd
+    if [[ $confirmConfAdd == "n" || $confirmConfAdd == "N" ]]; then
+        echo -en "${RED}Exit${NORMAL}"
+        echo ""
+        rm -rf ~/.uconsole
+        exit 0
+    fi
+
+    sed -i "s|SERVERS_LIST|${SERVERS_LIST[*]}|" ~/.uconsole/uconsole.conf
+    sed -i "s|USER_NAME|$cifsUserName|" ~/.uconsole/uconsole.conf
+    sed -i "s|USER_PWD|$cifsUserPwd|" ~/.uconsole/uconsole.conf
+    sed -i "s|SER_DOMAIN|$cifsDomain|" ~/.uconsole/uconsole.conf
 else
     . ~/.uconsole/uconsole.conf
 fi
