@@ -94,6 +94,7 @@ echo -en "${GREEN}Do you want to mount share? (Y/n): ${NORMAL}"
                     cifsDomain=$CIFS_DOMAIN
             fi
         done
+        
     fi
 
     echo -en "${CYAN}Enter account folder on share server:${NORMAL} $mountServer/"
