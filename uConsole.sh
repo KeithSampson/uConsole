@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 ##################################################
 ### Script: uConsole                           ###
-### Version 0.2.6                              ###
+### Version 0.2.7                              ###
 ### Made by Kostya Shutenko                    ###
 ### Contact address: kostya.shutenko@gmail.com ###
 ##################################################
@@ -190,8 +190,7 @@ function userDel () {
 
 if [[ ! -f ~/.uconsole/uconsole.conf ]]; then
     echo "Config file absent and will be created."
-    mkdir -p ~/.uconsole/
-    cp $BIN_PATH/sources/uconsole.conf-simple ~/.uconsole/uconsole.conf
+
     
     declare -a SERVERS_LIST
     i=0
@@ -250,6 +249,9 @@ if [[ ! -f ~/.uconsole/uconsole.conf ]]; then
         exit 0
     fi
 
+	mkdir -p ~/.uconsole/
+    cp $BIN_PATH/sources/uconsole.conf-simple ~/.uconsole/uconsole.conf
+	
     sed -i "s|SERVERS_LIST|${SERVERS_LIST[*]}|" ~/.uconsole/uconsole.conf
     sed -i "s|USER_NAME|$cifsUserName|" ~/.uconsole/uconsole.conf
     sed -i "s|USER_PWD|$cifsUserPwd|" ~/.uconsole/uconsole.conf
