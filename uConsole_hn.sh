@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 ##################################################
 ### Script: uConsole_hn                        ###
-### Version 0.3.2                              ###
+### Version 0.3.3                              ###
 ### Made by Kostya Shutenko                    ###
 ### Contact address: kostya.shutenko@gmail.com ###
 ##################################################
@@ -226,6 +226,47 @@ echo -en "${GREEN}Do you want to mount share? (Y/n): ${NORMAL}"
 	fi
 }
 
+function shareUmount {
+	# Select user
+	if [[ $# != 0 ]]; then
+        userAccount=$1
+	else
+		echo "Please select account for mount: "
+		select userAccount in `ls /var/lib/vz/private/$VID/home/`
+		do
+			if [[ $userAccount == "" ]]; then
+				echo -en "${RED}Account is not selected${NORMAL}"
+				echo ""
+				exit 2
+			fi
+			break
+		done
+	fi
+	
+	
+	
+	# Umount BIND share
+	umountTarget=`vzctl exec $UID cat /etc/mtab  |grep /$userAccount/ |cut -d" " -f2`
+	vzctl exec $VID umount $umountTarget
+	
+	# Delete from OpenVZ config
+	if [[ `cat /etc/vz/conf/$VID.mount |grep "/mnt/$userAccount" |wc -l` > 0 ]]; then
+		sed -i "/\/mnt\/$userAccount\//d" /etc/fstab
+		sed -i "/\/home\/$userAccount\//d" /etc/fstab
+		echo "Share for $userAccount account removed from /etc/fstab."
+	fi
+	
+	# Umount CIFS
+	umountSource=`cat /etc/mtab  |grep /$userAccount/ |cut -d" " -f2`
+	umount -l $umountSource
+	
+	# Delete from fstab
+	if [[ `cat /etc/fstab |grep "/mnt/$userAccount" |wc -l` > 0 ]]; then
+		sed -i "/\/mnt\/$userAccount\//d" /etc/fstab
+		echo "Share for $userAccount account removed from /etc/fstab."
+	fi
+}
+
 function userAdd {
     echo -en "${CYAN}Enter username: ${NORMAL}"
     read userAccount
@@ -300,6 +341,12 @@ function userDel {
             sed -i "/\/mnt\/$userAccount\//d" /etc/fstab
             echo "Share for $userAccount account removed from /etc/fstab."
         fi
+		
+		if [[ `cat /etc/vz/conf/$VID.mount |grep "/mnt/$userAccount" |wc -l` > 0 ]]; then
+            sed -i "/\/mnt\/$userAccount\//d" /etc/fstab
+            sed -i "/\/home\/$userAccount\//d" /etc/fstab
+            echo "Share for $userAccount account removed from /etc/fstab."
+        fi
     fi
 
 }
@@ -321,14 +368,20 @@ case "$1" in
 		configRecreate
         ;;
 'userAdd')
+		. ~/.uconsole/uconsole.conf
         userAdd
         ;;
 'userDel')
+		. ~/.uconsole/uconsole.conf
         userDel
         ;;
 'shareMount')
 		. ~/.uconsole/uconsole.conf
         shareMount
+        ;;
+'shareUmount')
+		. ~/.uconsole/uconsole.conf
+        shareUmount
         ;;
 *)
         echo "Wrong method."
