@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 ##################################################
 ### Script: uConsole                           ###
-### Version 0.2.9                              ###
+### Version 0.3.0                              ###
 ### Made by Kostya Shutenko                    ###
 ### Contact address: kostya.shutenko@gmail.com ###
 ##################################################
@@ -158,6 +158,7 @@ echo -en "${GREEN}Do you want to mount share? (Y/n): ${NORMAL}"
                     cifsUserName=$CIFS_USERNAME
                     cifsUserPwd=$CIFS_PWD
                     cifsDomain=$CIFS_DOMAIN
+					break 1
             fi
         done
         
