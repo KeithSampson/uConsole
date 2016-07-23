@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 ##################################################
 ### Script: uConsole                           ###
-### Version 0.2.5                              ###
+### Version 0.2.6                              ###
 ### Made by Kostya Shutenko                    ###
 ### Contact address: kostya.shutenko@gmail.com ###
 ##################################################
