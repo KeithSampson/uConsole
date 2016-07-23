@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 ##################################################
 ### Script: uConsole_hn                        ###
-### Version 0.3.1                              ###
+### Version 0.3.2                              ###
 ### Made by Kostya Shutenko                    ###
 ### Contact address: kostya.shutenko@gmail.com ###
 ##################################################
@@ -92,6 +92,7 @@ function configRecreate {
         echo -en "${RED}Exit${NORMAL}"
         echo ""
         rm -rf ~/.uconsole
+		rm -f /etc/vz/conf/$VID.mount
         exit 0
     fi
 
@@ -99,6 +100,8 @@ function configRecreate {
 	chmod -R 700 ~/.uconsole
     cp $BIN_PATH/sources/uconsole.conf-sample ~/.uconsole/uconsole.conf
     cp $BIN_PATH/sources/smb.conf-sample ~/.uconsole/smb.conf
+    cp $BIN_PATH/sources/VID.mount-sample /etc/vz/conf/$VID.mount
+	chmod +x /etc/vz/conf/$VID.mount
 
     sed -i "s|SERVERS_LIST|${SERVERS_LIST[*]}|" ~/.uconsole/uconsole.conf
     sed -i "s|FTP_VID|$VID|" ~/.uconsole/uconsole.conf
@@ -209,8 +212,18 @@ echo -en "${GREEN}Do you want to mount share? (Y/n): ${NORMAL}"
         echo "Share for $userAccount account added to /etc/fstab."
 	else
         echo "${RED}ERROR: Share for $userAccount account is not added to /etc/fstab.${NORMAL}"
-		exit 3
     fi
+	
+	# Change config for bind mount
+	srcValue="SRC[$userAccount]=$mountTarget"
+	dstValue="DST[$userAccount]=/home/$userAccount/$mountFolder"
+	sed -i "/# SRC_ARRAY/a $srcValue" /etc/vz/conf/$VID.mount
+	sed -i "/# DST_ARRAY/a $dstValue" /etc/vz/conf/$VID.mount
+	if [[ `cat /etc/vz/conf/$VID.mount |grep "$mountTarget" |wc -l` > 0 && `cat /etc/vz/conf/$VID.mount |grep "/home/$userAccount/$mountFolder" |wc -l` > 0 ]]; then
+		echo "OpenVZ config updated to mount share for user $userAccount."
+	else
+		echo "${RED}ERROR: OpenVZ config was not updated.${NORMAL}"
+	fi
 }
 
 function userAdd {
