@@ -4,8 +4,8 @@ SERVERS="SERVERS_LIST"
 # Username for CIFS share
 CIFS_USERNAME="USER_NAME"
 
-# Domain for CIFS share
-CIFS_DOMAIN="USER_DOMAIN"
-
 # Password for CIFS share
 CIFS_PWD="USER_PWD"
+
+# Domain for CIFS share
+CIFS_DOMAIN="USER_DOMAIN"
