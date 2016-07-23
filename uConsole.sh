@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 ##################################################
 ### Script: uConsole                           ###
-### Version 0.2.8                              ###
+### Version 0.2.9                              ###
 ### Made by Kostya Shutenko                    ###
 ### Contact address: kostya.shutenko@gmail.com ###
 ##################################################
@@ -279,6 +279,7 @@ case "$1" in
         userDel
         ;;
 'shareMount')
+		. ~/.uconsole/uconsole.conf
         shareMount
         ;;
 *)
