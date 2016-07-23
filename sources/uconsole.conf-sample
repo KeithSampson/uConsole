@@ -9,3 +9,6 @@ CIFS_PWD="USER_PWD"
 
 # Domain for CIFS share
 CIFS_DOMAIN="USER_DOMAIN"
+
+# FTP server VID
+VID="FTP_VID"
