@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 ##################################################
 ### Script: uConsole                           ###
-### Version 0.2.7                              ###
+### Version 0.2.8                              ###
 ### Made by Kostya Shutenko                    ###
 ### Contact address: kostya.shutenko@gmail.com ###
 ##################################################
@@ -13,7 +13,7 @@ CYAN='\e[0;36m'
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 
-function updatesCheck () {
+function updatesCheck {
     remoteVer=`curl -s https://raw.githubusercontent.com/KeithSampson/uConsole/master/uConsole.sh |grep "### Version" |head -n1 |sed s/[^0-9.]//g`
     currentVer=`cat $0 |grep "### Version" |head -n1 |sed s/[^0-9.]//g`
 
@@ -33,168 +33,9 @@ function updatesCheck () {
     fi                  
 }
 
-function shareMount () {
-echo -en "${GREEN}Do you want to mount share? (Y/n): ${NORMAL}"
-    read confirmMount
-    if [[ $confirmMount == "n" || $confirmMount == "N" ]]; then
-        exit 5
-    else
-        if [[ $# != 0 ]]; then
-            userAccount=$1
-        else
-            echo "Please select account for mount: "
-            select userAccount in `ls /home`
-            do
-                if [[ $userAccount == "" ]]; then
-                    echo -en "${RED}Account is not selected${NORMAL}"
-                    echo ""
-                    exit 2
-                fi
-                break
-            done
-        fi
-
-        echo "Select share server: "
-        select shareServer in `echo $SERVERS` 'Custom'
-        do
-            if [[ $shareServer == 'Custom' ]]; then
-                until [[ $msStatus == 0 ]]; do
-                    echo -en "${CYAN}Enter new share path (in format //IP_ADDRESS/SHARE): ${NORMAL}"
-                    read mountServer
-                    if [[ `echo $mountServer |cut -c1-2` == '//' ]]; then
-                        msStatus=0
-                        break 1
-                    fi
-                    echo -en "${RED}Incorrect path: $mountServer. Please use format //IP_ADDRESS/SHARE${NORMAL}"
-                    echo ""
-                done
-            elif [[ $shareServer != "" ]]; then
-                mountServer=$shareServer
-            else
-                echo -en "${RED}Server is not selected${NORMAL}"
-                echo ""
-                exit 2
-            fi
-            break
-        done
-
-        echo "Select username for mount share:"
-        select shareUsername in `echo $CIFS_USERNAME"@"$CIFS_DOMAIN` 'Custom'
-        do
-            if [[ $shareUsername == 'Custom' ]]; then
-                    echo -en "${CYAN}Enter default username for mount share folders: ${NORMAL}"
-                    read cifsUserName
-                    echo -en "${CYAN}Enter default password for mount share folders: ${NORMAL}"
-                    read cifsUserPwd
-                    echo -en "${CYAN}Enter domain for share user: ${NORMAL}"
-                    read cifsDomain
-            else
-                    cifsUserName=$CIFS_USERNAME
-                    cifsUserPwd=$CIFS_PWD
-                    cifsDomain=$CIFS_DOMAIN
-            fi
-        done
-        
-    fi
-
-    echo -en "${CYAN}Enter account folder on share server:${NORMAL} $mountServer/"
-    read mountFolder
-    mkdir -p /home/$userAccount/$mountFolder
-    chown -R $userAccount.$userAccount /home/$userAccount/$mountFolder
-    mountSource="$mountServer/$mountFolder"
-
-    echo "mount -t cifs $mountSource /home/$userAccount/$mountFolder -o username=$cifsUserName,password=$cifsUserPwd,domain=$cifsDomain" >> /etc/fstab
-    if [[ `cat /etc/fstab |grep "/home/$userAccount/" |wc -l` > 0 ]]; then
-        echo "$(date +%F_%H-%M-%S) - Share for $userAccount account added to /etc/fstab."
-    fi
-}
-
-function userAdd () {
-    echo -en "${CYAN}Enter username: ${NORMAL}"
-    read userAccount
-    echo -en "${CYAN}Enter password for account: ${NORMAL}"
-    read pswdNormal
-    pswdHash=`openssl passwd -1 $pswdNormal`
-
-    echo -en "${BOLD}Account will be created with the follwing paramethers:${NORMAL}"
-    echo ""
-    echo -en "${BOLD}Username:${NORMAL} $userAccount"
-    echo ""
-    echo -en "${BOLD}Password:${NORMAL} $pswdNormal"
-    echo ""
-    echo -en "${GREEN}Please confirm (Y/n): ${NORMAL}"
-    read confirmAdd
-    if [[ $confirmAdd == "n" || $confirmAdd == "N" ]]; then
-        echo -en "${RED}Exit${NORMAL}"
-        echo ""
-        exit 0
-    fi
-
-    useradd --create-home --password $pswdHash $userAccount
-    if id -u $userAccount >/dev/null 2>&1; then
-        echo "$(date +%F_%H-%M-%S) - Account $userAccount created"
-    else
-        echo "$(date +%F_%H-%M-%S) - [error] Account $userAccount was not created. Abort."
-        exit 3
-    fi
-
-    shareMount $userAccount
-}
-
-function userDel () {
-    if [[ `ls /home |wc -l` == 0 ]]; then
-        echo -en "${RED}Nothing found in home directory. Exit.${NORMAL}"
-        echo ""
-        exit 2
-    fi
-    echo -en "${BOLD}Please select account for removal:  ${NORMAL}"
-    echo ""
-    select userAccount in `ls /home`
-    do
-        if [[ $userAccount == "" ]]; then
-            echo -en "${RED}Account is not selected${NORMAL}"
-            echo ""
-            exit 2
-        fi
-        break
-    done
-
-    if id -u $userAccount >/dev/null 2>&1; then
-        echo -en "${GREEN}Account $userAccount will be removed. Please confirm (y/N): ${NORMAL}"
-        echo ""
-        read confirmDel
-    else
-        echo -en "${RED}$(date +%F_%H-%M-%S) - [error] Account $userAccount was not found in system. Abort. ${NORMAL}"
-        echo ""
-        confirmDel="N"
-        exit 3
-    fi
-    
-    if [[ $confirmDel == "y" || $confirmAdd == "Y" ]]; then
-        userdel --remove $userAccount
-        if id -u $userAccount >/dev/null 2>&1; then
-            echo "$(date +%F_%H-%M-%S) - [error] Account $userAccount was not removed."
-            exit 3
-        else
-            echo "$(date +%F_%H-%M-%S) - Account $userAccount removed"
-        fi
-
-        if [[ `cat /etc/fstab |grep "/home/$userAccount/" |wc -l` > 0 ]]; then
-            sed -i "/\/home\/$userAccount\//d" /etc/fstab
-            echo "$(date +%F_%H-%M-%S) - Share for $userAccount account removed from /etc/fstab."
-        fi
-    fi
-
-}
-
-
-if [[ ! -f ~/.uconsole/uconsole.conf ]]; then
-    echo "Config file absent and will be created."
-
-    
-    declare -a SERVERS_LIST
+function configRecreate {
+ declare -a SERVERS_LIST
     i=0
-
     until [[ $asStatus == 0 ]]; do
         until [[ $msStatus == 0 ]]; do
             echo -en "${CYAN}Enter new share path (in format //IP_ADDRESS/SHARE): ${NORMAL}"
@@ -250,12 +91,175 @@ if [[ ! -f ~/.uconsole/uconsole.conf ]]; then
     fi
 
 	mkdir -p ~/.uconsole/
-    cp $BIN_PATH/sources/uconsole.conf-simple ~/.uconsole/uconsole.conf
+    cp $BIN_PATH/sources/uconsole.conf-sample ~/.uconsole/uconsole.conf
 	
     sed -i "s|SERVERS_LIST|${SERVERS_LIST[*]}|" ~/.uconsole/uconsole.conf
     sed -i "s|USER_NAME|$cifsUserName|" ~/.uconsole/uconsole.conf
     sed -i "s|USER_PWD|$cifsUserPwd|" ~/.uconsole/uconsole.conf
-    sed -i "s|SER_DOMAIN|$cifsDomain|" ~/.uconsole/uconsole.conf
+    sed -i "s|USER_DOMAIN|$cifsDomain|" ~/.uconsole/uconsole.conf
+}
+
+function shareMount {
+echo -en "${GREEN}Do you want to mount share? (Y/n): ${NORMAL}"
+    read confirmMount
+    if [[ $confirmMount == "n" || $confirmMount == "N" ]]; then
+        exit 5
+    else
+        if [[ $# != 0 ]]; then
+            userAccount=$1
+        else
+            echo "Please select account for mount: "
+            select userAccount in `ls /home`
+            do
+                if [[ $userAccount == "" ]]; then
+                    echo -en "${RED}Account is not selected${NORMAL}"
+                    echo ""
+                    exit 2
+                fi
+                break
+            done
+        fi
+
+        echo "Select share server: "
+        select shareServer in `echo $SERVERS` 'Custom'
+        do
+            if [[ $shareServer == 'Custom' ]]; then
+                until [[ $msStatus == 0 ]]; do
+                    echo -en "${CYAN}Enter new share path (in format //IP_ADDRESS/SHARE): ${NORMAL}"
+                    read mountServer
+                    if [[ `echo $mountServer |cut -c1-2` == '//' ]]; then
+                        msStatus=0
+                        break 1
+                    fi
+                    echo -en "${RED}Incorrect path: $mountServer. Please use format //IP_ADDRESS/SHARE${NORMAL}"
+                    echo ""
+                done
+            elif [[ $shareServer != "" ]]; then
+                mountServer=$shareServer
+            else
+                echo -en "${RED}Server is not selected${NORMAL}"
+                echo ""
+                exit 2
+            fi
+            break
+        done
+
+        echo "Select username for mount share:"
+        select shareUsername in `echo $CIFS_USERNAME"@"$CIFS_DOMAIN` 'Custom'
+        do
+            if [[ $shareUsername == 'Custom' ]]; then
+                    echo -en "${CYAN}Enter username for mount share folder: ${NORMAL}"
+                    read cifsUserName
+                    echo -en "${CYAN}Enter domain for share user: ${NORMAL}"
+                    read cifsDomain
+                    echo -en "${CYAN}Enter password for mount share folder: ${NORMAL}"
+                    read cifsUserPwd
+            else
+                    cifsUserName=$CIFS_USERNAME
+                    cifsUserPwd=$CIFS_PWD
+                    cifsDomain=$CIFS_DOMAIN
+            fi
+        done
+        
+    fi
+
+    echo -en "${CYAN}Enter account folder on share server:${NORMAL} $mountServer/"
+    read mountFolder
+    mkdir -p /home/$userAccount/$mountFolder
+    chown -R $userAccount.$userAccount /home/$userAccount/$mountFolder
+    
+	mountSource="$mountServer/$mountFolder"
+
+	mount.cifs $mountSource /home/$userAccount/$mountFolder -o rw,uid=$userAccount,gid=$userAccount,username=$cifsUserName,password=$cifsUserPwd,domain=$cifsDomain
+    
+	echo "$mountSource /home/$userAccount/$mountFolder cifs uid=$userAccount,gid=$userAccount,username=$cifsUserName,password=$cifsUserPwd,domain=$cifsDomain,iocharset=utf8,sec=ntlm,rw 0 0" | sudo tee -a /etc/fstab > /dev/null
+    if [[ `cat /etc/fstab |grep "/home/$userAccount/" |wc -l` > 0 ]]; then
+        echo "$(date +%F_%H-%M-%S) - Share for $userAccount account added to /etc/fstab."
+    fi
+}
+
+function userAdd {
+    echo -en "${CYAN}Enter username: ${NORMAL}"
+    read userAccount
+    echo -en "${CYAN}Enter password for account: ${NORMAL}"
+    read pswdNormal
+    pswdHash=`openssl passwd -1 $pswdNormal`
+
+    echo -en "${BOLD}Account will be created with the follwing paramethers:${NORMAL}"
+    echo ""
+    echo -en "${BOLD}Username:${NORMAL} $userAccount"
+    echo ""
+    echo -en "${BOLD}Password:${NORMAL} $pswdNormal"
+    echo ""
+    echo -en "${GREEN}Please confirm (Y/n): ${NORMAL}"
+    read confirmAdd
+    if [[ $confirmAdd == "n" || $confirmAdd == "N" ]]; then
+        echo -en "${RED}Exit${NORMAL}"
+        echo ""
+        exit 0
+    fi
+
+    useradd --create-home --password $pswdHash $userAccount
+    if id -u $userAccount >/dev/null 2>&1; then
+        echo "$(date +%F_%H-%M-%S) - Account $userAccount created"
+    else
+        echo "$(date +%F_%H-%M-%S) - [error] Account $userAccount was not created. Abort."
+        exit 3
+    fi
+
+    shareMount $userAccount
+}
+
+function userDel {
+    if [[ `ls /home |wc -l` == 0 ]]; then
+        echo -en "${RED}Nothing found in home directory. Exit.${NORMAL}"
+        echo ""
+        exit 2
+    fi
+    echo -en "${BOLD}Please select account for removal:  ${NORMAL}"
+    echo ""
+    select userAccount in `ls /home`
+    do
+        if [[ $userAccount == "" ]]; then
+            echo -en "${RED}Account is not selected${NORMAL}"
+            echo ""
+            exit 2
+        fi
+        break
+    done
+
+    if id -u $userAccount >/dev/null 2>&1; then
+        echo -en "${GREEN}Account $userAccount will be removed. Please confirm (y/N): ${NORMAL}"
+        echo ""
+        read confirmDel
+    else
+        echo -en "${RED}$(date +%F_%H-%M-%S) - [error] Account $userAccount was not found in system. Abort. ${NORMAL}"
+        echo ""
+        confirmDel="N"
+        exit 3
+    fi
+    
+    if [[ $confirmDel == "y" || $confirmAdd == "Y" ]]; then
+        userdel --remove $userAccount
+        if id -u $userAccount >/dev/null 2>&1; then
+            echo "$(date +%F_%H-%M-%S) - [error] Account $userAccount was not removed."
+            exit 3
+        else
+            echo "$(date +%F_%H-%M-%S) - Account $userAccount removed"
+        fi
+
+        if [[ `cat /etc/fstab |grep "/home/$userAccount/" |wc -l` > 0 ]]; then
+            sed -i "/\/home\/$userAccount\//d" /etc/fstab
+            echo "$(date +%F_%H-%M-%S) - Share for $userAccount account removed from /etc/fstab."
+        fi
+    fi
+
+}
+
+
+if [[ ! -f ~/.uconsole/uconsole.conf ]]; then
+    echo "Config file absent and will be created."
+	configRecreate
 else
     . ~/.uconsole/uconsole.conf
 fi
@@ -264,6 +268,9 @@ fi
 case "$1" in
 'updatesCheck')
         updatesCheck
+        ;;
+'configRecreate')
+		configRecreate
         ;;
 'userAdd')
         userAdd

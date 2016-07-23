@@ -1,8 +1,0 @@
-# CIFS shares via space
-SERVERS="SERVERS_LIST"
-
-# CIFS username
-CIFS_USERNAME="USER_NAME"
-
-# CIFS password
-CIFS_PWD="USER_PWD"
