@@ -84,7 +84,7 @@ function configRecreate {
     echo ""
     echo -en "${BOLD}Domain:${NORMAL} $cifsDomain"
     echo ""
-	echo -en "${BOLD}VPS with FTP server:%{NORMAL} $VID"
+	echo -en "${BOLD}VPS with FTP server:${NORMAL} $VID"
 	echo ""
     echo -en "${GREEN}Please confirm (Y/n): ${NORMAL}"
     read confirmConfAdd
@@ -99,7 +99,7 @@ function configRecreate {
 	chmod -R 700 ~/.uconsole
     cp $BIN_PATH/sources/uconsole.conf-sample ~/.uconsole/uconsole.conf
     cp $BIN_PATH/sources/smb.conf-sample ~/.uconsole/smb.conf
-	
+
     sed -i "s|SERVERS_LIST|${SERVERS_LIST[*]}|" ~/.uconsole/uconsole.conf
     sed -i "s|FTP_VID|$VID|" ~/.uconsole/uconsole.conf
     sed -i "s|USER_NAME|$cifsUserName|" ~/.uconsole/uconsole.conf
@@ -218,7 +218,7 @@ function userAdd {
     read userAccount
     echo -en "${CYAN}Enter password for account: ${NORMAL}"
     read pswdNormal
-    pswdHash=`openssl passwd -1 $pswdNormal`
+	pswdHash=$(python -c "import crypt, getpass, pwd; print crypt.crypt('$pswdNormal','\$6\$SALTsalt\$')")
 
     echo -en "${BOLD}Account will be created with the follwing paramethers:${NORMAL}"
     echo ""
