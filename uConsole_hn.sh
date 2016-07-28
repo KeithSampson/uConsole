@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 ##################################################
 ### Script: uConsole_hn                        ###
-### Version 0.3.4                              ###
+### Version 0.3.5                              ###
 ### Made by Kostya Shutenko                    ###
 ### Contact address: kostya.shutenko@gmail.com ###
 ##################################################
@@ -331,6 +331,13 @@ function userDel {
     fi
     
     if [[ $confirmDel == "y" || $confirmAdd == "Y" ]]; then
+    
+        if [[ `cat /var/lib/vz/private/$VID/etc/mtab |grep "/home/$userAccount" |wc -l` > 0 ]]; then
+            for share in `cat /var/lib/vz/private/$VID/etc/mtab |grep "/home/$userAccount"  |cut -d" " -f2`; do
+                 vzctl exec $VID umount -l $share
+            done
+        fi
+    
         vzctl exec $VID userdel --remove --force $userAccount
         if vzctl exec $VID id -u $userAccount >/dev/null 2>&1; then
             echo "${RED}ERROR: Account $userAccount was not removed.${NORMAL}"
