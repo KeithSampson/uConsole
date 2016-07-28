@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 ##################################################
 ### Script: uConsole_hn                        ###
-### Version 0.3.7                              ###
+### Version 0.3.8                              ###
 ### Made by Kostya Shutenko                    ###
 ### Contact address: kostya.shutenko@gmail.com ###
 ##################################################
@@ -224,7 +224,7 @@ echo -en "${GREEN}Do you want to mount share? (Y/n): ${NORMAL}"
         echo -en "${RED}WARNING: Can not get UID or GID${NORMAL}"
         echo ""
     else
-	    chown -R $userAccountUID.$userAccountGID /var/lib/vz/root/$VID/home/$userAccount/$mountFolder
+	    chown -R $userAccountUID.$userAccountGID /var/lib/vz/root/$VID/home/$userAccount/public_ftp
     fi
 	
 	mount -n -t simfs $mountTarget /var/lib/vz/root/$VID/home/$userAccount/public_ftp -o $mountTarget
@@ -262,14 +262,14 @@ function shareUmount {
 	
 	# Delete from OpenVZ config
 	if [[ `cat /etc/vz/conf/$VID.mount |grep "/mnt/$userAccount" |wc -l` > 0 ]]; then
-		sed -i "/\/mnt\/$userAccount\//d" /etc/fstab
-		sed -i "/\/home\/$userAccount\//d" /etc/fstab
-		echo "Share for $userAccount account removed from /etc/fstab."
+        sed -i "/\/mnt\/$userAccount\//d" /etc/vz/conf/$VID.mount
+        sed -i "/\/home\/$userAccount\//d" /etc/vz/conf/$VID.mount
+        echo "Share for $userAccount account removed from /etc/vz/conf/$VID.mount."
 	fi
 	
 	# Umount CIFS
 	umountSource=`cat /etc/mtab  |grep /$userAccount/ |cut -d" " -f2`
-	umount -l $umountSource
+	umount $umountSource
 	
 	# Delete from fstab
 	if [[ `cat /etc/fstab |grep "/mnt/$userAccount" |wc -l` > 0 ]]; then
@@ -363,9 +363,9 @@ function userDel {
         fi
 		
 		if [[ `cat /etc/vz/conf/$VID.mount |grep "/mnt/$userAccount" |wc -l` > 0 ]]; then
-            sed -i "/\/mnt\/$userAccount\//d" /etc/fstab
-            sed -i "/\/home\/$userAccount\//d" /etc/fstab
-            echo "Share for $userAccount account removed from /etc/fstab."
+            sed -i "/\/mnt\/$userAccount\//d" /etc/vz/conf/$VID.mount
+            sed -i "/\/home\/$userAccount\//d" /etc/vz/conf/$VID.mount
+            echo "Share for $userAccount account removed from /etc/vz/conf/$VID.mount."
         fi
     fi
 
