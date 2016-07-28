@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 ##################################################
 ### Script: uConsole_hn                        ###
-### Version 0.3.5                              ###
+### Version 0.3.6                              ###
 ### Made by Kostya Shutenko                    ###
 ### Contact address: kostya.shutenko@gmail.com ###
 ##################################################
@@ -192,10 +192,7 @@ echo -en "${GREEN}Do you want to mount share? (Y/n): ${NORMAL}"
 
     echo -en "${CYAN}Enter account folder on share server:${NORMAL} $mountServer/"
     read mountFolder
-    # mkdir -p /var/lib/vz/private/$VID/home/$userAccount/$mountFolder
-    # chown -R $userAccountUID.$userAccountGID /var/lib/vz/private/$VID/home/$userAccount/$mountFolder
-	
-    
+
 	mountSource="$mountServer/$mountFolder"
 	mountTarget="/mnt/$userAccount/$mountFolder"
 	mkdir -p $mountTarget
@@ -214,20 +211,21 @@ echo -en "${GREEN}Do you want to mount share? (Y/n): ${NORMAL}"
 	else
         echo "${RED}ERROR: Share for $userAccount account is not added to /etc/fstab.${NORMAL}"
     fi
-	
-	# Change config for bind mount
+
 	srcValue="SRC[$userAccount]=$mountTarget"
-	# dstValue="DST[$userAccount]=/home/$userAccount/$mountFolder"
-	dstValue="DST[$userAccount]=/home/$userAccount"
-	
-	
+	dstValue="DST[$userAccount]=/home/$userAccount/public_ftp"
+
 	sed -i "/# SRC_ARRAY/a $srcValue" /etc/vz/conf/$VID.mount
 	sed -i "/# DST_ARRAY/a $dstValue" /etc/vz/conf/$VID.mount
-	if [[ `cat /etc/vz/conf/$VID.mount |grep "$mountTarget" |wc -l` > 0 && `cat /etc/vz/conf/$VID.mount |grep "/home/$userAccount/$mountFolder" |wc -l` > 0 ]]; then
+	if [[ `cat /etc/vz/conf/$VID.mount |grep "$mountTarget" |wc -l` > 0 && `cat /etc/vz/conf/$VID.mount |grep "/home/$userAccount/public_ftp" |wc -l` > 0 ]]; then
 		echo "OpenVZ config updated to mount share for user $userAccount."
 	else
-		echo "${RED}ERROR: OpenVZ config was not updated.${NORMAL}"
+		echo -en "${RED}ERROR: OpenVZ config was not updated.${NORMAL}"
+		echo ""
 	fi
+
+	# Mount directory to container
+	#mount -n -t simfs /usr/src $VE_ROOT/usr/src -o /usr/src
 }
 
 function shareUmount {
@@ -280,7 +278,9 @@ function userAdd {
     echo ""
     echo -en "${BOLD}Username:${NORMAL} $userAccount"
     echo ""
-    echo -en "${BOLD}Password:${NORMAL} $pswdNormal"
+    echo -en "${BOLD}Password (Normal):${NORMAL} $pswdNormal"
+    echo ""
+    echo -en "${BOLD}Password (Hash):${NORMAL} $pswdHash"
     echo ""
     echo -en "${GREEN}Please confirm (Y/n): ${NORMAL}"
     read confirmAdd
@@ -290,7 +290,7 @@ function userAdd {
         exit 0
     fi
 
-    vzctl exec $VID useradd --create-home --password $pswdHash $userAccount
+    vzctl exec $VID useradd --create-home --password "$pswdHash" "$userAccount"
     if  vzctl exec $VID id -u $userAccount >/dev/null 2>&1; then
         echo "Account $userAccount created"
     else
