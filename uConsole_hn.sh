@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 ##################################################
 ### Script: uConsole_hn                        ###
-### Version 0.3.6                              ###
+### Version 0.3.7                              ###
 ### Made by Kostya Shutenko                    ###
 ### Contact address: kostya.shutenko@gmail.com ###
 ##################################################
@@ -123,7 +123,7 @@ echo -en "${GREEN}Do you want to mount share? (Y/n): ${NORMAL}"
             userAccount=$1
         else
 			echo "Please select account for mount: "
-			select userAccount in `ls /var/lib/vz/private/$VID/home/`
+			select userAccount in `ls /var/lib/vz/root/$VID/home/`
 			do
 				if [[ $userAccount == "" ]]; then
 					echo -en "${RED}Account is not selected${NORMAL}"
@@ -134,14 +134,6 @@ echo -en "${GREEN}Do you want to mount share? (Y/n): ${NORMAL}"
 			done
 		fi
 		
-		userAccountUID=`vzctl exec $VID id -u $userAccount`
-		userAccountGID=`vzctl exec $VID id -g $userAccount`
-		if [[ $userAccountUID == "" || $userAccountGID == "" ]]; then
-			echo -en "${RED}ERROR: Can not get UID or GID${NORMAL}"
-            echo ""
-			exit 2
-		fi
-
         echo "Select share server: "
         select shareServer in `echo $SERVERS` 'Custom'
         do
@@ -225,7 +217,26 @@ echo -en "${GREEN}Do you want to mount share? (Y/n): ${NORMAL}"
 	fi
 
 	# Mount directory to container
-	#mount -n -t simfs /usr/src $VE_ROOT/usr/src -o /usr/src
+	mkdir -p /var/lib/vz/root/$VID/home/$userAccount/public_ftp
+    userAccountUID=`vzctl exec $VID id -u $userAccount`
+    userAccountGID=`vzctl exec $VID id -g $userAccount`
+    if [[ $userAccountUID == "" || $userAccountGID == "" ]]; then
+        echo -en "${RED}WARNING: Can not get UID or GID${NORMAL}"
+        echo ""
+    else
+	    chown -R $userAccountUID.$userAccountGID /var/lib/vz/root/$VID/home/$userAccount/$mountFolder
+    fi
+	
+	mount -n -t simfs $mountTarget /var/lib/vz/root/$VID/home/$userAccount/public_ftp -o $mountTarget
+	if [[ `cat /var/lib/vz/root/$VID/etc/mtab |grep "/home/$userAccount/public_ftp" |wc -l` > 0 ]]; then
+	    echo "Share folder mounted to FTP VPS. No need to restat FTP VPS."
+	else
+	    echo -en "${RED}WARNING: Share folder was not mount to FTP VPS. You need to restart VPS${NORMAL}"
+		echo ""
+		echo -en "${RED}In order to do it please run the following command: vzctl restart $VID${NORMAL}"
+		echo ""
+
+	fi
 }
 
 function shareUmount {
@@ -234,7 +245,7 @@ function shareUmount {
         userAccount=$1
 	else
 		echo "Please select account for mount: "
-		select userAccount in `ls /var/lib/vz/private/$VID/home/`
+		select userAccount in `ls /var/lib/vz/root/$VID/home/`
 		do
 			if [[ $userAccount == "" ]]; then
 				echo -en "${RED}Account is not selected${NORMAL}"
@@ -302,14 +313,14 @@ function userAdd {
 }
 
 function userDel {
-    if [[ `ls /var/lib/vz/private/$VID/home |wc -l` == 0 ]]; then
+    if [[ `ls /var/lib/vz/root/$VID/home |wc -l` == 0 ]]; then
         echo -en "${RED}Nothing found in home directory. Exit.${NORMAL}"
         echo ""
         exit 2
     fi
     echo -en "${BOLD}Please select account for removal:  ${NORMAL}"
     echo ""
-    select userAccount in `ls /var/lib/vz/private/$VID/home/`
+    select userAccount in `ls /var/lib/vz/root/$VID/home/`
     do
         if [[ $userAccount == "" ]]; then
             echo -en "${RED}Account is not selected${NORMAL}"
@@ -332,8 +343,8 @@ function userDel {
     
     if [[ $confirmDel == "y" || $confirmAdd == "Y" ]]; then
     
-        if [[ `cat /var/lib/vz/private/$VID/etc/mtab |grep "/home/$userAccount" |wc -l` > 0 ]]; then
-            for share in `cat /var/lib/vz/private/$VID/etc/mtab |grep "/home/$userAccount"  |cut -d" " -f2`; do
+        if [[ `cat /var/lib/vz/root/$VID/etc/mtab |grep "/home/$userAccount" |wc -l` > 0 ]]; then
+            for share in `cat /var/lib/vz/root/$VID/etc/mtab |grep "/home/$userAccount"  |cut -d" " -f2`; do
                  vzctl exec $VID umount -l $share
             done
         fi
