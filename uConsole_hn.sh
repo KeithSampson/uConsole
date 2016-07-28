@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 ##################################################
 ### Script: uConsole_hn                        ###
-### Version 0.3.3                              ###
+### Version 0.3.4                              ###
 ### Made by Kostya Shutenko                    ###
 ### Contact address: kostya.shutenko@gmail.com ###
 ##################################################
@@ -192,8 +192,9 @@ echo -en "${GREEN}Do you want to mount share? (Y/n): ${NORMAL}"
 
     echo -en "${CYAN}Enter account folder on share server:${NORMAL} $mountServer/"
     read mountFolder
-    mkdir -p /var/lib/vz/private/$VID/home/$userAccount/$mountFolder
-    chown -R $userAccountUID.$userAccountGID /var/lib/vz/private/$VID/home/$userAccount/$mountFolder
+    # mkdir -p /var/lib/vz/private/$VID/home/$userAccount/$mountFolder
+    # chown -R $userAccountUID.$userAccountGID /var/lib/vz/private/$VID/home/$userAccount/$mountFolder
+	
     
 	mountSource="$mountServer/$mountFolder"
 	mountTarget="/mnt/$userAccount/$mountFolder"
@@ -216,7 +217,10 @@ echo -en "${GREEN}Do you want to mount share? (Y/n): ${NORMAL}"
 	
 	# Change config for bind mount
 	srcValue="SRC[$userAccount]=$mountTarget"
-	dstValue="DST[$userAccount]=/home/$userAccount/$mountFolder"
+	# dstValue="DST[$userAccount]=/home/$userAccount/$mountFolder"
+	dstValue="DST[$userAccount]=/home/$userAccount"
+	
+	
 	sed -i "/# SRC_ARRAY/a $srcValue" /etc/vz/conf/$VID.mount
 	sed -i "/# DST_ARRAY/a $dstValue" /etc/vz/conf/$VID.mount
 	if [[ `cat /etc/vz/conf/$VID.mount |grep "$mountTarget" |wc -l` > 0 && `cat /etc/vz/conf/$VID.mount |grep "/home/$userAccount/$mountFolder" |wc -l` > 0 ]]; then
@@ -242,8 +246,6 @@ function shareUmount {
 			break
 		done
 	fi
-	
-	
 	
 	# Umount BIND share
 	umountTarget=`vzctl exec $UID cat /etc/mtab  |grep /$userAccount/ |cut -d" " -f2`
