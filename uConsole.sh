@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 ##################################################
 ### Script: uConsole                           ###
-### Version 0.3.2                              ###
+### Version 0.3.3                              ###
 ### Made by Kostya Shutenko                    ###
 ### Contact address: kostya.shutenko@gmail.com ###
 ##################################################
@@ -92,11 +92,15 @@ function configRecreate {
 
 	mkdir -p ~/.uconsole/
     cp $BIN_PATH/sources/uconsole.conf-sample ~/.uconsole/uconsole.conf
+	cp $BIN_PATH/sources/smb.conf-sample ~/.uconsole/smb.conf
 	
     sed -i "s|SERVERS_LIST|${SERVERS_LIST[*]}|" ~/.uconsole/uconsole.conf
     sed -i "s|USER_NAME|$cifsUserName|" ~/.uconsole/uconsole.conf
+	sed -i "s|USER_NAME|$cifsUserName|" ~/.uconsole/smb.conf
     sed -i "s|USER_PWD|$cifsUserPwd|" ~/.uconsole/uconsole.conf
+	sed -i "s|USER_PWD|$cifsUserPwd|" ~/.uconsole/smb.conf
     sed -i "s|USER_DOMAIN|$cifsDomain|" ~/.uconsole/uconsole.conf
+	sed -i "s|USER_DOMAIN|$cifsDomain|" ~/.uconsole/smb.conf
 }
 
 function shareMount {
