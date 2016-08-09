@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 ##################################################
 ### Script: uConsole                           ###
-### Version 0.3.4                              ###
+### Version 0.3.5                              ###
 ### Made by Kostya Shutenko                    ###
 ### Contact address: kostya.shutenko@gmail.com ###
 ##################################################
@@ -186,6 +186,39 @@ echo -en "${GREEN}Do you want to mount share? (Y/n): ${NORMAL}"
     fi
 }
 
+function shareUmount {
+echo -en "${GREEN}Do you want to umount share? (y/N): ${NORMAL}"
+    read confirmMount
+    if [[ $confirmMount == "n" || $confirmMount == "N" ]]; then
+        exit 5
+    else
+        if [[ $# != 0 ]]; then
+            userAccount=$1
+        else
+            echo "Please select account for umount: "
+            select userAccount in `ls /home`
+            do
+                if [[ $userAccount == "" ]]; then
+                    echo -en "${RED}Account is not selected${NORMAL}"
+                    echo ""
+                    exit 2
+                fi
+                break
+            done
+        fi
+    fi   
+	
+	
+	if [[ `mount |grep "/home/$userAccount" |wc -l` > 0 ]]; then
+		umount -l /home/$userAccount/public_ftp	
+	fi
+	
+	if [[ `cat /etc/fstab |grep "/home/$userAccount/" |wc -l` > 0 ]]; then
+		sed -i "/\/home\/$userAccount\//d" /etc/fstab
+		echo "$(date +%F_%H-%M-%S) - Share for $userAccount account removed from /etc/fstab."
+    fi
+}
+
 function userAdd {
     echo -en "${CYAN}Enter username: ${NORMAL}"
     read userAccount
@@ -251,6 +284,7 @@ function userDel {
     fi
     
     if [[ $confirmDel == "y" || $confirmAdd == "Y" ]]; then
+		shareUmount $userAccount
         userdel --remove $userAccount
 		groupdel $userAccount
         if id -u $userAccount >/dev/null 2>&1; then
@@ -259,13 +293,7 @@ function userDel {
         else
             echo "$(date +%F_%H-%M-%S) - Account $userAccount removed"
         fi
-
-        if [[ `cat /etc/fstab |grep "/home/$userAccount/" |wc -l` > 0 ]]; then
-            sed -i "/\/home\/$userAccount\//d" /etc/fstab
-            echo "$(date +%F_%H-%M-%S) - Share for $userAccount account removed from /etc/fstab."
-        fi
     fi
-
 }
 
 
@@ -293,6 +321,9 @@ case "$1" in
 'shareMount')
 		. ~/.uconsole/uconsole.conf
         shareMount
+        ;;
+'shareUmount')
+        shareUmount
         ;;
 *)
         echo "Wrong method."
