@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 ##################################################
 ### Script: uConsole                           ###
-### Version 0.3.0                              ###
+### Version 0.3.1                              ###
 ### Made by Kostya Shutenko                    ###
 ### Contact address: kostya.shutenko@gmail.com ###
 ##################################################
@@ -166,14 +166,12 @@ echo -en "${GREEN}Do you want to mount share? (Y/n): ${NORMAL}"
 
     echo -en "${CYAN}Enter account folder on share server:${NORMAL} $mountServer/"
     read mountFolder
-    mkdir -p /home/$userAccount/$mountFolder
-    chown -R $userAccount.$userAccount /home/$userAccount/$mountFolder
     
 	mountSource="$mountServer/$mountFolder"
 
-	mount.cifs $mountSource /home/$userAccount/$mountFolder -o rw,uid=$userAccount,gid=$userAccount,username=$cifsUserName,password=$cifsUserPwd,domain=$cifsDomain
+	mount.cifs $mountSource /home/$userAccount/public_ftp -o rw,uid=$userAccount,gid=$userAccount,username=$cifsUserName,password=$cifsUserPwd,domain=$cifsDomain
     
-	echo "$mountSource /home/$userAccount/$mountFolder cifs uid=$userAccount,gid=$userAccount,username=$cifsUserName,password=$cifsUserPwd,domain=$cifsDomain,iocharset=utf8,sec=ntlm,rw 0 0" | sudo tee -a /etc/fstab > /dev/null
+	echo "$mountSource /home/$userAccount/public_ftp cifs uid=$userAccount,gid=$userAccount,username=$cifsUserName,password=$cifsUserPwd,domain=$cifsDomain,iocharset=utf8,sec=ntlm,rw 0 0" | sudo tee -a /etc/fstab > /dev/null
     if [[ `cat /etc/fstab |grep "/home/$userAccount/" |wc -l` > 0 ]]; then
         echo "$(date +%F_%H-%M-%S) - Share for $userAccount account added to /etc/fstab."
     fi
