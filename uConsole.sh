@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 ##################################################
 ### Script: uConsole                           ###
-### Version 0.3.3                              ###
+### Version 0.3.4                              ###
 ### Made by Kostya Shutenko                    ###
 ### Contact address: kostya.shutenko@gmail.com ###
 ##################################################
@@ -207,15 +207,18 @@ function userAdd {
         exit 0
     fi
 
-    useradd --create-home --password $pswdHash $userAccount
+    useradd --create-home --shell=/bin/false --password $pswdHash $userAccount
     if id -u $userAccount >/dev/null 2>&1; then
         echo "$(date +%F_%H-%M-%S) - Account $userAccount created"
+		sermod $userAccount -g sftponly
+		
+		shareMount $userAccount
     else
         echo "$(date +%F_%H-%M-%S) - [error] Account $userAccount was not created. Abort."
         exit 3
     fi
 
-    shareMount $userAccount
+    
 }
 
 function userDel {
@@ -249,6 +252,7 @@ function userDel {
     
     if [[ $confirmDel == "y" || $confirmAdd == "Y" ]]; then
         userdel --remove $userAccount
+		groupdel $userAccount
         if id -u $userAccount >/dev/null 2>&1; then
             echo "$(date +%F_%H-%M-%S) - [error] Account $userAccount was not removed."
             exit 3
