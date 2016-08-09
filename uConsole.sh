@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 ##################################################
 ### Script: uConsole                           ###
-### Version 0.3.1                              ###
+### Version 0.3.2                              ###
 ### Made by Kostya Shutenko                    ###
 ### Contact address: kostya.shutenko@gmail.com ###
 ##################################################
@@ -144,7 +144,8 @@ echo -en "${GREEN}Do you want to mount share? (Y/n): ${NORMAL}"
             break
         done
 
-        echo "Select username for mount share:"
+        
+		echo "Select username for mount share:"
         select shareUsername in `echo $CIFS_USERNAME"@"$CIFS_DOMAIN` 'Custom'
         do
             if [[ $shareUsername == 'Custom' ]]; then
@@ -154,14 +155,18 @@ echo -en "${GREEN}Do you want to mount share? (Y/n): ${NORMAL}"
                     read cifsDomain
                     echo -en "${CYAN}Enter password for mount share folder: ${NORMAL}"
                     read cifsUserPwd
-            else
-                    cifsUserName=$CIFS_USERNAME
-                    cifsUserPwd=$CIFS_PWD
-                    cifsDomain=$CIFS_DOMAIN
+					smbConfigPath="/root/.uconsole/smb_$cifsUserName.conf"
+					touch $smbConfigPath
+					echo "username=$cifsUserName" > $smbConfigPath
+					echo "dom=$cifsDomain" >> $smbConfigPath
+					echo "password=$cifsUserPwd" >> $smbConfigPath
 					break 1
+            else
+				smbConfigPath="/root/.uconsole/smb.conf"
+				break 1
             fi
-        done
-        
+		done
+		
     fi
 
     echo -en "${CYAN}Enter account folder on share server:${NORMAL} $mountServer/"
@@ -169,9 +174,9 @@ echo -en "${GREEN}Do you want to mount share? (Y/n): ${NORMAL}"
     
 	mountSource="$mountServer/$mountFolder"
 
-	mount.cifs $mountSource /home/$userAccount/public_ftp -o rw,uid=$userAccount,gid=$userAccount,username=$cifsUserName,password=$cifsUserPwd,domain=$cifsDomain
-    
-	echo "$mountSource /home/$userAccount/public_ftp cifs uid=$userAccount,gid=$userAccount,username=$cifsUserName,password=$cifsUserPwd,domain=$cifsDomain,iocharset=utf8,sec=ntlm,rw 0 0" | sudo tee -a /etc/fstab > /dev/null
+	mount.cifs $mountSource /home/$userAccount/public_ftp -o rw,uid=$userAccount,gid=$userAccount,credentials=$smbConfigPath
+	
+	echo "$mountSource /home/$userAccount/public_ftp cifs uid=$userAccount,gid=$userAccount,credentials=$smbConfigPath,iocharset=utf8,sec=ntlm,rw 0 0" | sudo tee -a /etc/fstab > /dev/null
     if [[ `cat /etc/fstab |grep "/home/$userAccount/" |wc -l` > 0 ]]; then
         echo "$(date +%F_%H-%M-%S) - Share for $userAccount account added to /etc/fstab."
     fi
