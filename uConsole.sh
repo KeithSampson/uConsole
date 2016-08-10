@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 ##################################################
 ### Script: uConsole                           ###
-### Version 0.3.5                              ###
+### Version 0.3.6                              ###
 ### Made by Kostya Shutenko                    ###
 ### Contact address: kostya.shutenko@gmail.com ###
 ##################################################
@@ -210,7 +210,8 @@ echo -en "${GREEN}Do you want to umount share? (y/N): ${NORMAL}"
 	
 	
 	if [[ `mount |grep "/home/$userAccount" |wc -l` > 0 ]]; then
-		umount -l /home/$userAccount/public_ftp	
+		umount -l /home/$userAccount/public_ftp
+		echo "$(date +%F_%H-%M-%S) - Share for $userAccount umounted."
 	fi
 	
 	if [[ `cat /etc/fstab |grep "/home/$userAccount/" |wc -l` > 0 ]]; then
@@ -243,7 +244,7 @@ function userAdd {
     useradd --create-home --shell=/bin/false --password $pswdHash $userAccount
     if id -u $userAccount >/dev/null 2>&1; then
         echo "$(date +%F_%H-%M-%S) - Account $userAccount created"
-		sermod $userAccount -g sftponly
+		usermod $userAccount -g sftponly
 		
 		shareMount $userAccount
     else
@@ -286,13 +287,13 @@ function userDel {
     if [[ $confirmDel == "y" || $confirmAdd == "Y" ]]; then
 		shareUmount $userAccount
         userdel --remove $userAccount
-		groupdel $userAccount
         if id -u $userAccount >/dev/null 2>&1; then
             echo "$(date +%F_%H-%M-%S) - [error] Account $userAccount was not removed."
             exit 3
         else
             echo "$(date +%F_%H-%M-%S) - Account $userAccount removed"
         fi
+		#groupdel $userAccount
     fi
 }
 
