@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 ##################################################
 ### Script: uConsole                           ###
-### Version 0.4.3                              ###
+### Version 0.4.5                              ###
 ### Made by Kostya Shutenko                    ###
 ### Contact address: kostya.shutenko@gmail.com ###
 ##################################################
@@ -178,9 +178,9 @@ echo -en "${GREEN}Do you want to mount share? (Y/n): ${NORMAL}"
     
 	mountSource="$mountServer/$mountFolder"
 
-	mount.cifs $mountSource /home/$userAccount/public_ftp -o rw,uid=$userAccount,gid=$userAccount,credentials=$smbConfigPath
+	mount.cifs $mountSource /home/$userAccount/upload -o rw,uid=$userAccount,gid=$userAccount,credentials=$smbConfigPath
 	
-	echo "$mountSource /home/$userAccount/public_ftp cifs uid=$userAccount,gid=$userAccount,credentials=$smbConfigPath,iocharset=utf8,sec=ntlm,rw 0 0" | sudo tee -a /etc/fstab > /dev/null
+	echo "$mountSource /home/$userAccount/upload cifs uid=$userAccount,gid=$userAccount,credentials=$smbConfigPath,iocharset=utf8,sec=ntlm,rw 0 0" | sudo tee -a /etc/fstab > /dev/null
     if [[ `cat /etc/fstab |grep "/home/$userAccount/" |wc -l` > 0 ]]; then
         echo "$(date +%F_%H-%M-%S) - Share for $userAccount account added to /etc/fstab."
     fi
@@ -210,7 +210,7 @@ echo -en "${GREEN}Do you want to umount share? (y/N): ${NORMAL}"
 	
 	
 	if [[ `mount |grep "/home/$userAccount" |wc -l` > 0 ]]; then
-		umount -l /home/$userAccount/public_ftp
+		umount -l /home/$userAccount/upload
 		echo "$(date +%F_%H-%M-%S) - Share for $userAccount umounted."
 	fi
 	
