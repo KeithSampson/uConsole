@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 ##################################################
 ### Script: uConsole                           ###
-### Version 0.3.8                              ###
+### Version 0.4.0                              ###
 ### Made by Kostya Shutenko                    ###
 ### Contact address: kostya.shutenko@gmail.com ###
 ##################################################
@@ -241,7 +241,7 @@ function userAdd {
         exit 0
     fi
 
-    useradd -G sftponly --skel /etc/skel_ftp --create-home --shell /sbin/bahs --password $pswdHash $userAccount
+    useradd -G sftponly --create-home --shell /sbin/bash --password $pswdHash $userAccount
 	chown root.$userAccount /home/$userAccount
 	chmod 750 /home/$userAccount
     if id -u $userAccount >/dev/null 2>&1; then
