@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 ##################################################
 ### Script: uConsole                           ###
-### Version 0.4.1                              ###
+### Version 0.4.2                              ###
 ### Made by Kostya Shutenko                    ###
 ### Contact address: kostya.shutenko@gmail.com ###
 ##################################################
@@ -296,6 +296,11 @@ function userDel {
         fi
 		if [[ `cat /etc/group |grep $userAccount |wc -l` > 0 ]]; then
 			groupdel $userAccount
+			echo "$(date +%F_%H-%M-%S) - Group $userAccount removed."
+		fi
+		if [[ -d /home/$userAccount ]]; then
+			rm -rf /home/$userAccount
+			echo "$(date +%F_%H-%M-%S) - Folder /home/$userAccount removed."
 		fi
     fi
 }
