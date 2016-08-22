@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 ##################################################
 ### Script: uConsole                           ###
-### Version 0.3.7                              ###
+### Version 0.3.8                              ###
 ### Made by Kostya Shutenko                    ###
 ### Contact address: kostya.shutenko@gmail.com ###
 ##################################################
@@ -242,9 +242,10 @@ function userAdd {
     fi
 
     useradd -G sftponly --skel /etc/skel_ftp --create-home --shell /sbin/bahs --password $pswdHash $userAccount
+	chown root.$userAccount /home/$userAccount
+	chmod 750 /home/$userAccount
     if id -u $userAccount >/dev/null 2>&1; then
         echo "$(date +%F_%H-%M-%S) - Account $userAccount created"
-		usermod $userAccount -g sftponly
 		
 		shareMount $userAccount
     else
